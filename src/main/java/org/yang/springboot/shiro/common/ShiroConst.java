@@ -17,4 +17,8 @@ public class ShiroConst {
 
         put("/**", "authc");
     }};
+
+    public static final long TOKEN_EXPIRE_TIME = 5 * 60;
+
+    public static final String TOKEN_CLAIM_KEY = "username";
 }
