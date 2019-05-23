@@ -1,14 +1,17 @@
 package org.yang.springboot.shiro.realm;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.yang.springboot.shiro.common.ShiroConst;
 import org.yang.springboot.shiro.model.dto.RoleDTO;
 import org.yang.springboot.shiro.model.dto.UserDTO;
 import org.yang.springboot.shiro.service.UserService;
+import org.yang.springboot.shiro.util.JwtUtil;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -19,9 +22,15 @@ import java.util.Set;
  * @author eleven
  * @date 2019/05/23
  */
+@Slf4j
 public class DefineUserRealm extends AuthorizingRealm {
     @Autowired
     private UserService userService;
+
+    @Override
+    public boolean supports(AuthenticationToken token) {
+        return true;
+    }
 
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
@@ -41,22 +50,33 @@ public class DefineUserRealm extends AuthorizingRealm {
 
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
-        UsernamePasswordToken upToken = (UsernamePasswordToken) token;
-        String username = upToken.getUsername();
+        String jwtToken = (String) token.getCredentials();
+
+        if (log.isInfoEnabled()) {
+            log.info("current jwtToken is {}", jwtToken);
+        }
+
+        String claimValue = JwtUtil.getClaimValueFromToken(ShiroConst.TOKEN_CLAIM_KEY, jwtToken);
 
         // Null username is invalid
-        if (username == null) {
+        if (claimValue == null) {
             throw new AccountException("Null username are not allowed by this realm.");
         }
 
-        UserDTO userDTO = userService.findUserByName(username);
+        UserDTO userDTO = userService.findUserByName(claimValue);
 
         if (userDTO == null) {
-            throw new UnknownAccountException("No account found for admin [" + username + "]");
+            throw new UnknownAccountException("No account found for [" + claimValue + "]");
         }
 
-        SimpleAuthenticationInfo info = new SimpleAuthenticationInfo(userDTO, userDTO.getPassword(), getName());
+        if (log.isInfoEnabled()) {
+            log.info("current secret is {}", userDTO.getPassword());
+        }
 
-        return info;
+        if (!JwtUtil.verifyToken(jwtToken, userDTO.getPassword())) {
+            throw new AuthenticationException("Username or password error");
+        }
+
+        return new SimpleAuthenticationInfo(userDTO, jwtToken, getName());
     }
 }

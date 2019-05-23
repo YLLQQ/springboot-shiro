@@ -7,8 +7,8 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.collect.Lists;
-import lombok.AllArgsConstructor;
 import org.yang.springboot.shiro.common.ShiroConst;
+import org.yang.springboot.shiro.model.shiro.DefineClaim;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -24,10 +24,9 @@ import java.util.List;
 public class JwtUtil {
 
     public static void main(String[] args) {
-        JwtUtil jwtUtil = new JwtUtil();
 
-        DefineClaim defineClaim = jwtUtil.new DefineClaim("username", "test");
-        DefineClaim defineClaim1 = jwtUtil.new DefineClaim("username1", "test1");
+        DefineClaim defineClaim = new DefineClaim("username", "test");
+        DefineClaim defineClaim1 = new DefineClaim("username1", "test1");
 
         ArrayList<DefineClaim> defineClaims = Lists.newArrayList(defineClaim, defineClaim1);
 
@@ -105,7 +104,7 @@ public class JwtUtil {
         JWTCreator.Builder builder = JWT.create();
 
         for (DefineClaim defineClaim : defineClaims) {
-            builder.withClaim(defineClaim.key, defineClaim.value);
+            builder.withClaim(defineClaim.getKey(), defineClaim.getValue());
         }
 
         return builder
@@ -123,10 +122,5 @@ public class JwtUtil {
         return Algorithm.HMAC256(secret);
     }
 
-    @AllArgsConstructor
-    public class DefineClaim {
-        private String key;
 
-        private String value;
-    }
 }
