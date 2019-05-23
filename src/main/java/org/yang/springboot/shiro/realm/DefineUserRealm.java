@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.yang.springboot.shiro.common.ShiroConst;
 import org.yang.springboot.shiro.model.dto.RoleDTO;
 import org.yang.springboot.shiro.model.dto.UserDTO;
+import org.yang.springboot.shiro.model.shiro.JwtToken;
 import org.yang.springboot.shiro.service.UserService;
 import org.yang.springboot.shiro.util.JwtUtil;
 
@@ -29,7 +30,7 @@ public class DefineUserRealm extends AuthorizingRealm {
 
     @Override
     public boolean supports(AuthenticationToken token) {
-        return true;
+        return token instanceof JwtToken;
     }
 
     @Override
