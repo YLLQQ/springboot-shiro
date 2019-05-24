@@ -16,14 +16,17 @@ import java.util.Map;
 public class ShiroConst {
 
     public static final String HEADER_AUTHORIZATION_KEY = "Authorization";
+
     public static final String JWT_ACCESS = "jwt";
 
     public static final long TOKEN_EXPIRE_TIME = 5 * 60;
 
     public static final String TOKEN_CLAIM_KEY = "username";
+
     public static Map<String, Filter> FILTER_MAP = new HashMap<String, Filter>() {{
         put(JWT_ACCESS, new JwtFilter());
     }};
+
     public static Map<String, String> ROUTE_FILTER = new LinkedHashMap<String, String>() {{
         put("/login", "anon");
         put("/401", "anon");
