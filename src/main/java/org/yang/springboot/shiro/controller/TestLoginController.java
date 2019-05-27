@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.yang.springboot.shiro.common.ShiroConst;
-import org.yang.springboot.shiro.model.dto.UserDTO;
+import org.yang.springboot.shiro.model.domain.user.UserInfoDO;
 import org.yang.springboot.shiro.model.shiro.DefineClaim;
-import org.yang.springboot.shiro.service.UserService;
+import org.yang.springboot.shiro.service.user.UserInfoService;
 import org.yang.springboot.shiro.util.JwtUtil;
 
 import java.util.ArrayList;
@@ -25,16 +25,16 @@ import java.util.ArrayList;
 public class TestLoginController {
 
     @Autowired
-    private UserService userService;
+    private UserInfoService userInfoService;
 
     @PostMapping("/login")
-    public Object login(@RequestBody String username) {
+    public Object login(@RequestBody String loginAccount) {
 
-        UserDTO userDTO = userService.findUserByName(username);
+        UserInfoDO userInfoDO = userInfoService.findUserInfoDOByLoginAccount(loginAccount);
 
-        ArrayList<DefineClaim> defineClaims = Lists.newArrayList(new DefineClaim(ShiroConst.TOKEN_CLAIM_KEY, userDTO.getId() + ""));
+        ArrayList<DefineClaim> defineClaims = Lists.newArrayList(new DefineClaim(ShiroConst.TOKEN_CLAIM_KEY, userInfoDO.getLoginAccount()));
 
-        String token = JwtUtil.createToken(defineClaims, userDTO.getPassword(), ShiroConst.TOKEN_EXPIRE_TIME);
+        String token = JwtUtil.createToken(defineClaims, userInfoDO.getLoginAccount(), ShiroConst.TOKEN_EXPIRE_TIME);
 
         return token;
     }

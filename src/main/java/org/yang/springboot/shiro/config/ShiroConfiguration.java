@@ -1,18 +1,30 @@
 package org.yang.springboot.shiro.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.mgt.DefaultSessionStorageEvaluator;
 import org.apache.shiro.mgt.DefaultSubjectDAO;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
+import org.apache.shiro.util.Assert;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
-import org.yang.springboot.shiro.common.ShiroConst;
 import org.yang.springboot.shiro.common.error.ShiroRouteConst;
+import org.yang.springboot.shiro.model.domain.shiro.ShiroFilterChainDO;
+import org.yang.springboot.shiro.model.domain.shiro.ShiroFilterDO;
 import org.yang.springboot.shiro.realm.DefineUserRealm;
+import org.yang.springboot.shiro.service.shiro.ShiroFilterChainService;
+import org.yang.springboot.shiro.service.shiro.ShiroFilterService;
+import org.yang.springboot.shiro.util.ClassUtil;
+
+import javax.servlet.Filter;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * org.yang.springboot.shiro.config.ShiroConfiguration
@@ -20,37 +32,102 @@ import org.yang.springboot.shiro.realm.DefineUserRealm;
  * @author eleven
  * @date 2019/05/23
  */
+@Slf4j
 @Configuration
 public class ShiroConfiguration {
 
+    /**
+     * Shiro的Web过滤器
+     *
+     * @return
+     */
     @Bean
-    public ShiroFilterFactoryBean shiroFilter() {
+    public ShiroFilterFactoryBean shiroFilter(
+            ShiroFilterService shiroFilterService,
+            ShiroFilterChainService shiroFilterChainService
+    ) {
+        /**
+         * 获取过滤器
+         */
+        List<ShiroFilterDO> allShiroFilter = shiroFilterService.findAllShiroFilter();
+        Map<String, Filter> filterMap = shiroFilterDO2FilterMap(allShiroFilter);
+
+        if (log.isInfoEnabled()) {
+            log.info("Filter config map is {}", filterMap);
+        }
+
+        /**
+         * 获取过滤链
+         */
+        List<ShiroFilterChainDO> allFilterChain = shiroFilterChainService.findAllFilterChain();
+        LinkedHashMap<String, String> linkedHashMap = shiroFilterChainDO2FilterChainMap(allFilterChain);
+
+        if (log.isInfoEnabled()) {
+            log.info("Filter chain config map is {}", linkedHashMap);
+        }
+
         ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
 
         shiroFilterFactoryBean.setSecurityManager(securityManager());
 
-        shiroFilterFactoryBean.setFilters(ShiroConst.FILTER_MAP);
-        shiroFilterFactoryBean.setFilterChainDefinitionMap(ShiroConst.ROUTE_FILTER);
+        shiroFilterFactoryBean.setFilters(filterMap);
+        shiroFilterFactoryBean.setFilterChainDefinitionMap(linkedHashMap);
         shiroFilterFactoryBean.setUnauthorizedUrl(ShiroRouteConst.DEFAULT_UNAUTHORIZED_REDIRECT_URL);
 
         return shiroFilterFactoryBean;
     }
 
+    public LinkedHashMap<String, String> shiroFilterChainDO2FilterChainMap(List<ShiroFilterChainDO> filterChainDOList) {
+        Assert.notEmpty(filterChainDOList, "cannot init illegal shiro chain filter list to Map");
+
+        LinkedHashMap<String, String> linkedHashMap = new LinkedHashMap<>(filterChainDOList.size());
+
+        for (ShiroFilterChainDO shiroFilterChainDO : filterChainDOList) {
+            linkedHashMap.put(shiroFilterChainDO.getUrl(), shiroFilterChainDO.getPermission());
+        }
+
+        return linkedHashMap;
+    }
+
+    public Map<String, Filter> shiroFilterDO2FilterMap(List<ShiroFilterDO> filterDOList) {
+        Assert.notEmpty(filterDOList, "cannot init illegal shiro filter list to Map");
+
+        Map<String, Filter> filterMap = new HashMap<>(filterDOList.size());
+
+        for (ShiroFilterDO shiroFilterDO : filterDOList) {
+            filterMap.put(shiroFilterDO.getFilterShortening(), ClassUtil.initByClassPath(shiroFilterDO.getFilterClassPath()));
+        }
+
+        return filterMap;
+    }
+
+    /**
+     * 具体Realm实现
+     *
+     * @return
+     */
     @Bean
     public DefineUserRealm defineUserRealm() {
         return new DefineUserRealm();
     }
 
+    /**
+     * 安全管理器
+     *
+     * @return
+     */
     @Bean
     public DefaultWebSecurityManager securityManager() {
         DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
 
         securityManager.setRealm(defineUserRealm());
 
-        DefaultSubjectDAO subjectDAO = new DefaultSubjectDAO();
         DefaultSessionStorageEvaluator defaultSessionStorageEvaluator = new DefaultSessionStorageEvaluator();
 
         defaultSessionStorageEvaluator.setSessionStorageEnabled(false);
+
+        DefaultSubjectDAO subjectDAO = new DefaultSubjectDAO();
+
         subjectDAO.setSessionStorageEvaluator(defaultSessionStorageEvaluator);
 
         securityManager.setSubjectDAO(subjectDAO);

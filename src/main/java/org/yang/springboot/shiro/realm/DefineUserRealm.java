@@ -8,13 +8,12 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.yang.springboot.shiro.common.ShiroConst;
-import org.yang.springboot.shiro.model.dto.RoleDTO;
-import org.yang.springboot.shiro.model.dto.UserDTO;
+import org.yang.springboot.shiro.model.domain.user.UserInfoDO;
 import org.yang.springboot.shiro.model.shiro.JwtToken;
-import org.yang.springboot.shiro.service.UserService;
+import org.yang.springboot.shiro.service.user.UserInfoService;
+import org.yang.springboot.shiro.service.user.UserRoleRelationService;
 import org.yang.springboot.shiro.util.JwtUtil;
 
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -26,7 +25,10 @@ import java.util.Set;
 @Slf4j
 public class DefineUserRealm extends AuthorizingRealm {
     @Autowired
-    private UserService userService;
+    private UserInfoService userInfoService;
+
+    @Autowired
+    private UserRoleRelationService userRoleRelationService;
 
     @Override
     public boolean supports(AuthenticationToken token) {
@@ -36,13 +38,9 @@ public class DefineUserRealm extends AuthorizingRealm {
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
-        UserDTO userInfo = (UserDTO) principals.getPrimaryPrincipal();
+        UserInfoDO userInfoDO = (UserInfoDO) principals.getPrimaryPrincipal();
 
-        Set<String> roleSet = new HashSet<>();
-
-        for (RoleDTO roleDTO : userInfo.getRoleList()) {
-            roleSet.add(roleDTO.getRoleName());
-        }
+        Set<String> roleSet = userRoleRelationService.findRoleNameSetByUserId(userInfoDO.getId());
 
         authorizationInfo.setRoles(roleSet);
 
@@ -64,20 +62,20 @@ public class DefineUserRealm extends AuthorizingRealm {
             throw new AccountException("Null username are not allowed by this realm.");
         }
 
-        UserDTO userDTO = userService.findUserByName(claimValue);
+        UserInfoDO userInfoDO = userInfoService.findUserInfoDOByLoginAccount(claimValue);
 
-        if (userDTO == null) {
+        if (userInfoDO == null) {
             throw new UnknownAccountException("No account found for [" + claimValue + "]");
         }
 
         if (log.isInfoEnabled()) {
-            log.info("current secret is {}", userDTO.getPassword());
+            log.info("current secret is {}", userInfoDO.getLoginAccount());
         }
 
-        if (!JwtUtil.verifyToken(jwtToken, userDTO.getPassword())) {
+        if (!JwtUtil.verifyToken(jwtToken, userInfoDO.getLoginAccount())) {
             throw new AuthenticationException("Username or password error");
         }
 
-        return new SimpleAuthenticationInfo(userDTO, jwtToken, getName());
+        return new SimpleAuthenticationInfo(userInfoDO, jwtToken, getName());
     }
 }

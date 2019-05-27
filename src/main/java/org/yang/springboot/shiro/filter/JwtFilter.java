@@ -1,6 +1,8 @@
 package org.yang.springboot.shiro.filter;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
 import org.apache.shiro.web.util.WebUtils;
 import org.springframework.http.HttpStatus;
@@ -33,7 +35,9 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
         String authorization = getAuthorizationFromRequest(request);
 
         if (log.isInfoEnabled()) {
-            log.info("current authorization is {}", authorization);
+            HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+
+            log.info("current authorization is {}, visit uri is {}", authorization, httpServletRequest.getRequestURI());
         }
 
         return authorization != null;
@@ -42,6 +46,15 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
     @Override
     protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
         redirectToDefaultUrl(request, response);
+
+        return false;
+    }
+
+    @Override
+    protected boolean onLoginFailure(
+            AuthenticationToken token, AuthenticationException e, ServletRequest request, ServletResponse response
+    ) {
+        log.error("login fail, exception message is {}", e);
 
         return false;
     }
