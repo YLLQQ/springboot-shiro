@@ -1,8 +1,6 @@
 package org.yang.springboot.shiro.service.base;
 
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.util.Assert;
 
@@ -24,6 +22,32 @@ public abstract class BaseService {
      * @return
      */
     protected abstract JpaRepository getJpaRepository();
+
+    /**
+     * 根据条件分页获取数据
+     *
+     * @param t
+     * @param exampleMatcher
+     * @param page
+     * @param size
+     * @param <T>
+     * @return
+     */
+    protected <T> Page<T> findListWithPage(T t, ExampleMatcher exampleMatcher, int page, int size) {
+        Example<T> example = new Example<T>() {
+            @Override
+            public T getProbe() {
+                return t;
+            }
+
+            @Override
+            public ExampleMatcher getMatcher() {
+                return exampleMatcher;
+            }
+        };
+
+        return getJpaRepository().findAll(example, PageRequest.of(page, size));
+    }
 
     /**
      * 根据条件获取唯一数据

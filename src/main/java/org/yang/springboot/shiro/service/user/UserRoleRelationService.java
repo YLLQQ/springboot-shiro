@@ -3,6 +3,7 @@ package org.yang.springboot.shiro.service.user;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -63,6 +64,15 @@ public class UserRoleRelationService extends BaseService {
         Assert.notEmpty(roleIdSetByUserId, "cannot get role id by userId=" + userId);
 
         return roleIdSetByUserId;
+    }
+
+    public Page<UserRoleRelationDO> findRoleWithPageByUserId(Integer userId) {
+
+        UserRoleRelationDO userRoleRelationDO = new UserRoleRelationDO();
+
+        userRoleRelationDO.setUserId(userId);
+
+        return super.findListWithPage(userRoleRelationDO, ExampleMatcher.matching().withIgnoreCase(), 0, 10);
     }
 
     public List<UserRoleRelationDO> findAllRoleByUserId(Integer userId) {

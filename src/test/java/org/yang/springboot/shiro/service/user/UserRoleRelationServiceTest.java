@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.yang.springboot.shiro.model.domain.user.UserRoleRelationDO;
 
@@ -39,5 +40,12 @@ public class UserRoleRelationServiceTest {
         Set<Integer> roleIdList = userRoleRelationService.findRoleIdSetByUserId(1);
 
         log.info("result is {}", roleIdList);
+    }
+
+    @Test
+    public void findRoleWithPageByUserId() {
+        Page<UserRoleRelationDO> roleWithPageByUserId = userRoleRelationService.findRoleWithPageByUserId(1);
+
+        log.info("page result is {}", roleWithPageByUserId);
     }
 }
