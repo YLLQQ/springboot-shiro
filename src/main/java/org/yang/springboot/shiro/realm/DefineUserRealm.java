@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.yang.springboot.shiro.common.ShiroConst;
 import org.yang.springboot.shiro.model.domain.user.UserInfoDO;
 import org.yang.springboot.shiro.model.shiro.JwtToken;
+import org.yang.springboot.shiro.service.role.RolePermissionRelationService;
 import org.yang.springboot.shiro.service.user.UserInfoService;
 import org.yang.springboot.shiro.service.user.UserRoleRelationService;
 import org.yang.springboot.shiro.util.JwtUtil;
@@ -30,6 +31,9 @@ public class DefineUserRealm extends AuthorizingRealm {
     @Autowired
     private UserRoleRelationService userRoleRelationService;
 
+    @Autowired
+    private RolePermissionRelationService rolePermissionRelationService;
+
     @Override
     public boolean supports(AuthenticationToken token) {
         return token instanceof JwtToken;
@@ -40,9 +44,25 @@ public class DefineUserRealm extends AuthorizingRealm {
         SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
         UserInfoDO userInfoDO = (UserInfoDO) principals.getPrimaryPrincipal();
 
-        Set<String> roleSet = userRoleRelationService.findRoleNameSetByUserId(userInfoDO.getId());
+        Integer userId = userInfoDO.getId();
+
+        Set<String> roleSet = userRoleRelationService.findRoleNameSetByUserId(userId);
+
+        if (log.isInfoEnabled()) {
+            log.info("userId={} has roleSet is {}", userId, roleSet);
+        }
 
         authorizationInfo.setRoles(roleSet);
+
+        Set<String> permissionSet = rolePermissionRelationService.findPermissionSetByUserId(userId);
+
+        if (log.isInfoEnabled()) {
+            log.info("userId={} has permissionSet is {}", userId, permissionSet);
+        }
+
+        if (null != permissionSet) {
+            authorizationInfo.setStringPermissions(permissionSet);
+        }
 
         return authorizationInfo;
     }

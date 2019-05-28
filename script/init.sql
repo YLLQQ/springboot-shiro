@@ -96,3 +96,43 @@ create table user_role_relation
 
 INSERT INTO user_role_relation (id, user_id, role_id, create_time, last_update_time)
 VALUES (1, 1, 1, '2019-05-27 08:18:56', '2019-05-27 08:18:56');
+
+create table shiro_permission
+(
+  id                int auto_increment comment '权限编号'
+    primary key,
+  permission_group  varchar(32) default ''                not null comment '权限组',
+  permission_detail varchar(32) default ''                not null comment '权限详情',
+  create_time       timestamp   default CURRENT_TIMESTAMP not null comment '创建时间',
+  last_update_time  timestamp   default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '最近一次更新时间'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_bin
+  comment '权限表';
+
+INSERT INTO jnpay.shiro_permission (id, permission_group, permission_detail, create_time, last_update_time)
+VALUES (1, 'user:admin', 'insert', '2019-05-28 11:53:04', '2019-05-28 11:53:04');
+INSERT INTO jnpay.shiro_permission (id, permission_group, permission_detail, create_time, last_update_time)
+VALUES (2, 'user:admin', 'update', '2019-05-28 11:53:05', '2019-05-28 11:53:05');
+INSERT INTO jnpay.shiro_permission (id, permission_group, permission_detail, create_time, last_update_time)
+VALUES (3, 'user:admin', 'delete', '2019-05-28 11:53:05', '2019-05-28 11:53:05');
+
+create table role_permission_relation
+(
+  id               int auto_increment comment '自增编号'
+    primary key,
+  role_id          int                                 not null comment '角色编号',
+  permission_id    int                                 not null comment '权限编号',
+  create_time      timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
+  last_update_time timestamp default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '最近一次更新时间'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_bin
+  comment '角色权限关系表';
+
+INSERT INTO jnpay.role_permission_relation (id, role_id, permission_id, create_time, last_update_time)
+VALUES (1, 1, 1, '2019-05-28 12:05:15', '2019-05-28 12:05:15');
+INSERT INTO jnpay.role_permission_relation (id, role_id, permission_id, create_time, last_update_time)
+VALUES (2, 1, 2, '2019-05-28 12:05:15', '2019-05-28 12:05:15');
+INSERT INTO jnpay.role_permission_relation (id, role_id, permission_id, create_time, last_update_time)
+VALUES (3, 1, 3, '2019-05-28 12:05:15', '2019-05-28 12:05:15');
