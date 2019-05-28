@@ -2,7 +2,7 @@ package org.yang.springboot.shiro.model.dto.user;
 
 import lombok.Data;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.Set;
 
 /**
@@ -20,5 +20,5 @@ public class UserHasRoleAndPermissionDTO {
 
     private Set<String> permissionSet;
 
-    private Date visitTime;
+    private Instant visitTime;
 }

@@ -17,7 +17,10 @@ import org.yang.springboot.shiro.service.user.UserRoleRelationService;
 import org.yang.springboot.shiro.util.ContextHelper;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * org.yang.springboot.shiro.controller.TestLoginController
@@ -56,9 +59,8 @@ public class TestSysController {
         userHasRoleAndPermissionDTO.setPermissionSet(permissionSet);
 
         Instant instant = Instant.now();
-        Date nowDate = Date.from(instant);
 
-        userHasRoleAndPermissionDTO.setVisitTime(nowDate);
+        userHasRoleAndPermissionDTO.setVisitTime(instant);
 
         return userHasRoleAndPermissionDTO;
     }
