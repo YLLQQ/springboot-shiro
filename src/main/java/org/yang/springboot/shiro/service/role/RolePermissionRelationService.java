@@ -50,10 +50,14 @@ public class RolePermissionRelationService extends BaseService {
         HashSet<String> permissionSet = Sets.newHashSet();
 
         for (Integer integer : roleIdSetByUserId) {
-            permissionSet.addAll(findPermissionSetByRoleId(integer));
+            Set<String> permissionSetByRoleId = findPermissionSetByRoleId(integer);
+
+            if (!CollectionUtils.isEmpty(permissionSetByRoleId)) {
+                permissionSet.addAll(permissionSetByRoleId);
+            }
         }
 
-        return permissionSet;
+        return permissionSet.isEmpty() ? null : permissionSet;
     }
 
     public Set<String> findPermissionSetByRoleId(Integer roleId) {

@@ -7,14 +7,17 @@ import org.apache.shiro.web.filter.mgt.PathMatchingFilterChainResolver;
 import org.apache.shiro.web.servlet.AbstractShiroFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.yang.springboot.shiro.model.domain.shiro.ShiroFilterChainDO;
+import org.yang.springboot.shiro.model.dto.user.UserHasRoleAndPermissionDTO;
+import org.yang.springboot.shiro.service.role.RolePermissionRelationService;
 import org.yang.springboot.shiro.service.shiro.ShiroFilterChainService;
+import org.yang.springboot.shiro.service.user.UserRoleRelationService;
 import org.yang.springboot.shiro.util.ContextHelper;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.Instant;
+import java.util.*;
 
 /**
  * org.yang.springboot.shiro.controller.TestLoginController
@@ -29,6 +32,37 @@ public class TestSysController {
     @Autowired
     private ShiroFilterChainService shiroFilterChainService;
 
+    @Autowired
+    private UserRoleRelationService userRoleRelationService;
+
+    @Autowired
+    private ShiroFilterFactoryBean shiroFilterFactoryBean;
+
+    @Autowired
+    private RolePermissionRelationService rolePermissionRelationService;
+
+    @GetMapping("/sys/authorization/info/{userId}")
+    public UserHasRoleAndPermissionDTO getUserHasRoleAndPermissionDTO(@PathVariable("userId") Integer userId) {
+        UserHasRoleAndPermissionDTO userHasRoleAndPermissionDTO = new UserHasRoleAndPermissionDTO();
+
+        userHasRoleAndPermissionDTO.setUserId(userId);
+
+        Set<String> roleNameSet = userRoleRelationService.findRoleNameSetByUserId(userId);
+
+        userHasRoleAndPermissionDTO.setRoleSet(roleNameSet);
+
+        Set<String> permissionSet = rolePermissionRelationService.findPermissionSetByUserId(userId);
+
+        userHasRoleAndPermissionDTO.setPermissionSet(permissionSet);
+
+        Instant instant = Instant.now();
+        Date nowDate = Date.from(instant);
+
+        userHasRoleAndPermissionDTO.setVisitTime(nowDate);
+
+        return userHasRoleAndPermissionDTO;
+    }
+
     @GetMapping("/sys/shiro/info")
     public Object shiro() {
         ShiroFilterFactoryBean bean = ContextHelper.getBean(ShiroFilterFactoryBean.class);
@@ -42,12 +76,6 @@ public class TestSysController {
     public Boolean update() {
         List<ShiroFilterChainDO> allFilterChain = shiroFilterChainService.findAllFilterChain();
         LinkedHashMap<String, String> linkedHashMap = shiroFilterChainService.shiroFilterChainDO2FilterChainMap(allFilterChain);
-
-        ShiroFilterFactoryBean shiroFilterFactoryBean = ContextHelper.getBean(ShiroFilterFactoryBean.class);
-
-        if (log.isInfoEnabled()) {
-            log.info("old shiro filter bean is {}", shiroFilterFactoryBean);
-        }
 
         shiroFilterFactoryBean.getFilterChainDefinitionMap().clear();
         shiroFilterFactoryBean.setFilterChainDefinitionMap(linkedHashMap);
